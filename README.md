@@ -5,7 +5,7 @@
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase)
 
-**[Live : Play PrepPro Here](https://prepyproo.web.app)**
+**[Live : Play PrepPro Here](https://prep-professional.web.app/)**
 
 PrepPro is a sleek, serverless single-page web application (SPA) designed to help students organize their learning paths, master flashcards, and track their quiz accuracy over time. It features a gamified XP system, detailed analytics charting, and full cloud synchronization.
 
