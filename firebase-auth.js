@@ -15,15 +15,14 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Replace these values with your OWN Firebase web app configuration.
 const firebaseConfig = {
-    apiKey: "AIzaSyBr_HWbXdBgTHxJHq7LKod7a3ZpQGIbfbE",
-    authDomain: "prep-professional.firebaseapp.com",
-    projectId: "prep-professional",
-    storageBucket: "prep-professional.firebasestorage.app",
-    messagingSenderId: "126915199629",
-    appId: "1:126915199629:web:b3d33c705a18f8631458c4"
-  };
+    apiKey: "AIzaSyDA-YDzWiVgBOhaRAQLPc4sGu2W0aaMdrE",
+    authDomain: "prep-planner.firebaseapp.com",
+    projectId: "prep-planner",
+    storageBucket: "prep-planner.firebasestorage.app",
+    messagingSenderId: "435211150258",
+    appId: "1:435211150258:web:30e7b075f99cb31ec13aab"
+};
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
