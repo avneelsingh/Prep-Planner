@@ -7,7 +7,7 @@
 
 **[Live : Run Prep-Planner Here](https://prep-planner.web.app/)**
 
-PrepPro is a sleek, serverless single-page web application (SPA) designed to help students organize their learning paths, master flashcards, and track their quiz accuracy over time. It features a gamified XP system, detailed analytics charting, and full cloud synchronization.
+PrepPlanner is a sleek, serverless single-page web application (SPA) designed to help students organize their learning paths, master flashcards, and track their quiz accuracy over time. It features a gamified XP system, detailed analytics charting, and full cloud synchronization.
 
 ## ✨ Features
 
