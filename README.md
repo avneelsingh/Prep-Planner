@@ -31,7 +31,7 @@ PrepPlanner is a sleek, serverless single-page web application (SPA) designed to
 
 ---
 
-## 📖 How to Use PrepPro
+## 📖 How to Use PrepPlanner
 
 ### 1. Creator Mode (Building Content)
 By default, you enter the app in **Creator Mode**.
