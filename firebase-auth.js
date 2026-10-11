@@ -41,7 +41,7 @@ const copyDefaultData = () => structuredClone(DEFAULT_DATA);
 
 const userDocument = (uid) => doc(db, "users", uid);
 
-const localKey = (uid) => `prepProData_v12_${uid}`;
+const localKey = (uid) => `prepPlannerData_v12_${uid}`;
 
 function setStatus(message) {
     const el = document.getElementById("auth-status");
@@ -144,7 +144,7 @@ window.saveUserData = function (updatedData) {
         });
 
     return saveQueue.catch((error) => {
-        console.error("Failed to save PrepPro data:", error);
+        console.error("Failed to save PrepPlanner data:", error);
 
         if (currentUser && currentUser.uid === uid && window.app) {
             window.app.showToast(
@@ -213,7 +213,7 @@ onAuthStateChanged(auth, async (user) => {
 
         app.init();
     } catch (error) {
-        console.error("Could not load PrepPro data:", error);
+        console.error("Could not load PrepPlanner data:", error);
 
         // Fail closed rather than showing another account's data.
         currentUser = null;
