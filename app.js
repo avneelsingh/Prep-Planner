@@ -31,7 +31,7 @@ window.app = {
         try {
             await window.saveUserData(data);
         } catch (error) {
-            console.error("PrepPro save failed:", error);
+            console.error("PrepPlanner save failed:", error);
         }
     },
 
