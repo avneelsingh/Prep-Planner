@@ -2,6 +2,10 @@
    PrepPlanner - Global Styles
    ========================================================= */
 
+/* =========================================================
+   Theme Variables
+   ========================================================= */
+
 :root {
     color-scheme: dark;
 
@@ -33,6 +37,8 @@
 
 * {
     box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 html {
@@ -49,7 +55,7 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* Keep form controls consistent with the application theme */
+/* Consistent form controls */
 
 button,
 input,
@@ -71,6 +77,22 @@ button:disabled {
 img,
 svg {
     max-width: 100%;
+}
+
+input,
+textarea,
+select {
+    max-width: 100%;
+}
+
+textarea {
+    resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #64748b;
+    opacity: 1;
 }
 
 /* =========================================================
@@ -108,7 +130,7 @@ button:focus:not(:focus-visible) {
 }
 
 /* =========================================================
-   Premium Dark Mode Scrollbar
+   Premium Dark Mode Scrollbars
    ========================================================= */
 
 ::-webkit-scrollbar {
@@ -130,14 +152,7 @@ button:focus:not(:focus-visible) {
     background: var(--scrollbar-thumb-hover);
 }
 
-/* Firefox */
-
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-}
-
-/* Hide Scrollbar Without Disabling Scrolling */
+/* Hide scrollbar without disabling scrolling */
 
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -176,6 +191,8 @@ button:focus:not(:focus-visible) {
    Animations
    ========================================================= */
 
+/* Pop animation */
+
 @keyframes pop {
     0% {
         transform: scale(0.95);
@@ -189,8 +206,11 @@ button:focus:not(:focus-visible) {
 }
 
 .animate-pop {
-    animation: pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation: pop 0.25s
+        cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
+
+/* Fade-in animation */
 
 @keyframes fade-in {
     from {
@@ -205,6 +225,8 @@ button:focus:not(:focus-visible) {
 .animate-fade-in {
     animation: fade-in 0.25s ease forwards;
 }
+
+/* Slide-up animation */
 
 @keyframes slide-up {
     from {
@@ -253,26 +275,6 @@ button:focus:not(:focus-visible) {
 }
 
 /* =========================================================
-   Form Controls
-   ========================================================= */
-
-input,
-textarea,
-select {
-    max-width: 100%;
-}
-
-textarea {
-    resize: vertical;
-}
-
-input::placeholder,
-textarea::placeholder {
-    color: #64748b;
-    opacity: 1;
-}
-
-/* =========================================================
    Responsive Layout Improvements
    ========================================================= */
 
@@ -297,6 +299,7 @@ textarea::placeholder {
     #modal-content {
         border-radius: 1.5rem;
         max-height: 92vh;
+        max-height: 92dvh;
         overflow-y: auto;
     }
 }
