@@ -1,4 +1,11 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+// =========================================================
+// PrepPlanner - Firebase Authentication & Cloud Sync
+// Firebase project: prep-planner
+// =========================================================
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 
 import {
     getAuth,
@@ -15,6 +22,11 @@ import {
     getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// =========================================================
+// Firebase Configuration
+// Keep the original firebase-auth.js project details.
+// =========================================================
+
 const firebaseConfig = {
     apiKey: "AIzaSyDA-YDzWiVgBOhaRAQLPc4sGu2W0aaMdrE",
     authDomain: "prep-planner.firebaseapp.com",
@@ -24,13 +36,22 @@ const firebaseConfig = {
     appId: "1:435211150258:web:30e7b075f99cb31ec13aab"
 };
 
+// =========================================================
+// Initialize Firebase Services
+// =========================================================
+
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const provider = new GoogleAuthProvider();
 
+// =========================================================
+// Application State
+// =========================================================
+
 let currentUser = null;
 let saveQueue = Promise.resolve();
+let authRequestId = 0;
 
 const DEFAULT_DATA = {
     subjects: [],
@@ -43,32 +64,66 @@ const userDocument = (uid) => doc(db, "users", uid);
 
 const localKey = (uid) => `prepPlannerData_v12_${uid}`;
 
+// =========================================================
+// Status and View Helpers
+// =========================================================
+
 function setStatus(message) {
     const el = document.getElementById("auth-status");
-    if (el) el.textContent = message;
+
+    if (el) {
+        el.textContent = message;
+    }
 }
 
 function showLogin() {
-    document.getElementById("login-view").classList.remove("hidden");
-    document.getElementById("app-view").classList.add("hidden");
+    document.getElementById("login-view")
+        ?.classList.remove("hidden");
+
+    document.getElementById("app-view")
+        ?.classList.add("hidden");
 }
 
 function showApp() {
-    document.getElementById("login-view").classList.add("hidden");
-    document.getElementById("app-view").classList.remove("hidden");
+    document.getElementById("login-view")
+        ?.classList.add("hidden");
+
+    document.getElementById("app-view")
+        ?.classList.remove("hidden");
 }
+
+function showToast(message, type = "error") {
+    if (window.app && typeof window.app.showToast === "function") {
+        window.app.showToast(message, type);
+    } else {
+        console.error(message);
+    }
+}
+
+// =========================================================
+// User Profile Rendering
+// =========================================================
 
 function renderUser(user) {
     const area = document.getElementById("user-auth-area");
+
+    if (!area) return;
+
     area.replaceChildren();
 
     const wrapper = document.createElement("div");
     wrapper.className = "flex items-center gap-3 px-2 w-full";
 
     const avatar = document.createElement("img");
-    avatar.className = "w-10 h-10 rounded-full border-2 border-blue-100 shadow-sm";
+    avatar.className =
+        "w-10 h-10 rounded-full border-2 border-blue-100 shadow-sm";
     avatar.alt = "Profile picture";
-    avatar.src = user.photoURL || "";
+
+    if (user.photoURL) {
+        avatar.src = user.photoURL;
+    } else {
+        avatar.classList.add("hidden");
+    }
 
     const details = document.createElement("div");
     details.className = "flex flex-col flex-1 overflow-hidden";
@@ -82,7 +137,9 @@ function renderUser(user) {
     email.textContent = user.email || "";
 
     const logout = document.createElement("button");
-    logout.className = "text-xs font-bold text-red-400 text-left hover:underline w-max";
+    logout.type = "button";
+    logout.className =
+        "text-xs font-bold text-red-400 text-left hover:underline w-max";
     logout.textContent = "Log Out";
     logout.addEventListener("click", window.logoutUser);
 
@@ -91,7 +148,10 @@ function renderUser(user) {
     area.append(wrapper);
 }
 
-// Load cloud data before opening the dashboard.
+// =========================================================
+// User Data Loading
+// =========================================================
+
 async function loadUserData(user) {
     const snapshot = await getDoc(userDocument(user.uid));
 
@@ -101,16 +161,19 @@ async function loadUserData(user) {
         if (
             !cloudData ||
             !Array.isArray(cloudData.subjects) ||
-            typeof cloudData.xp !== "number"
+            typeof cloudData.xp !== "number" ||
+            !Number.isFinite(cloudData.xp)
         ) {
-            throw new Error("Your saved data has an unexpected format.");
+            throw new Error(
+                "Your saved data has an unexpected format."
+            );
         }
 
         return cloudData;
     }
 
-    // Do not automatically import a shared, unscoped local cache.
-    // A new account starts with a clean dataset.
+    // A new account starts with clean data.
+    // Never import another account's local cache automatically.
     const initialData = copyDefaultData();
 
     await setDoc(userDocument(user.uid), initialData);
@@ -118,36 +181,78 @@ async function loadUserData(user) {
     return initialData;
 }
 
-// Called by app.js whenever the user changes learning data.
+// =========================================================
+// Local Cache Helpers
+// =========================================================
+
+function cacheUserData(uid, userData) {
+    try {
+        localStorage.setItem(
+            localKey(uid),
+            JSON.stringify(userData)
+        );
+    } catch (error) {
+        // Cloud data remains the primary persistent copy.
+        console.warn("Unable to update local cache:", error);
+    }
+}
+
+// =========================================================
+// Save Data to Firestore
+// Called by app.js whenever learning data changes.
+// =========================================================
+
 window.saveUserData = function (updatedData) {
     if (!currentUser) {
         console.error("Save skipped: no authenticated user.");
-        return Promise.reject(new Error("You are not signed in."));
+
+        return Promise.reject(
+            new Error("You are not signed in.")
+        );
+    }
+
+    if (
+        !updatedData ||
+        !Array.isArray(updatedData.subjects) ||
+        typeof updatedData.xp !== "number" ||
+        !Number.isFinite(updatedData.xp)
+    ) {
+        return Promise.reject(
+            new Error("The data being saved has an invalid format.")
+        );
     }
 
     const uid = currentUser.uid;
     const snapshot = structuredClone(updatedData);
 
-    // Keep writes in order so an older save cannot overwrite a newer one.
+    // Queue writes so an older save cannot overtake a newer save.
     saveQueue = saveQueue
         .catch(() => {
-            // Allow later saves to retry after a previous failure.
+            // Let subsequent saves proceed after an earlier failure.
         })
         .then(async () => {
+            // Prevent writes to an account that is no longer active.
             if (!currentUser || currentUser.uid !== uid) {
-                throw new Error("Account changed before saving.");
+                throw new Error(
+                    "Account changed before saving."
+                );
             }
 
-            localStorage.setItem(localKey(uid), JSON.stringify(snapshot));
-
+            // Save to Firestore first.
             await setDoc(userDocument(uid), snapshot);
+
+            // Update the matching user's local cache.
+            cacheUserData(uid, snapshot);
         });
 
     return saveQueue.catch((error) => {
-        console.error("Failed to save PrepPlanner data:", error);
+        console.error(
+            "Failed to save PrepPlanner data:",
+            error
+        );
 
-        if (currentUser && currentUser.uid === uid && window.app) {
-            window.app.showToast(
+        if (currentUser && currentUser.uid === uid) {
+            showToast(
                 "Cloud save failed. Check your connection and Firebase rules.",
                 "error"
             );
@@ -157,69 +262,142 @@ window.saveUserData = function (updatedData) {
     });
 };
 
+// =========================================================
+// Optional Compatibility Function
+// Supports older code that calls syncToCloud(data).
+// =========================================================
+
+window.syncToCloud = function (localData) {
+    return window.saveUserData(localData);
+};
+
+// =========================================================
+// Google Sign-In
+// =========================================================
+
 window.loginWithGoogle = async function () {
     setStatus("Opening sign-in window...");
 
     try {
         await signInWithPopup(auth, provider);
+        // onAuthStateChanged handles loading the user's data.
     } catch (error) {
         console.error("Google sign-in failed:", error);
-        setStatus("Sign-in failed: " + error.message);
-    }
-};
 
-window.logoutUser = async function () {
-    try {
-        await signOut(auth);
-        // Keep the user's own local cache; do not delete cloud data.
-    } catch (error) {
-        console.error("Logout failed:", error);
-
-        if (window.app) {
-            window.app.showToast("Unable to log out.", "error");
+        if (error.code === "auth/popup-closed-by-user") {
+            setStatus("Sign-in cancelled.");
+        } else {
+            setStatus(
+                "Sign-in failed: " +
+                (error.message || "Please try again.")
+            );
         }
     }
 };
 
+// =========================================================
+// Logout
+// =========================================================
+
+window.logoutUser = async function () {
+    try {
+        await signOut(auth);
+
+        // Keep the user's own cache and cloud data.
+        // The auth-state listener resets in-memory data.
+    } catch (error) {
+        console.error("Logout failed:", error);
+        showToast("Unable to log out. Please try again.", "error");
+    }
+};
+
+// =========================================================
+// Authentication State Listener
+// =========================================================
+
 onAuthStateChanged(auth, async (user) => {
+    const requestId = ++authRequestId;
+
     if (!user) {
         currentUser = null;
 
-        // Reset in-memory state when no account is signed in.
+        // Reset in-memory application data on logout.
         data = copyDefaultData();
 
-        document.getElementById("user-auth-area").replaceChildren();
+        document.getElementById("user-auth-area")
+            ?.replaceChildren();
+
         showLogin();
         setStatus("");
+
         return;
     }
 
     currentUser = user;
+
+    // Keep the dashboard hidden until the correct account's
+    // Firestore data has loaded successfully.
     showLogin();
     setStatus("Loading your cloud data...");
 
     try {
         const loadedData = await loadUserData(user);
 
-        // Do not apply an old account's result if the session changed.
-        if (!currentUser || currentUser.uid !== user.uid) return;
+        // Ignore stale results if the authentication state changed.
+        if (
+            requestId !== authRequestId ||
+            !currentUser ||
+            currentUser.uid !== user.uid
+        ) {
+            return;
+        }
 
+        // Update the app's in-memory state.
         data = loadedData;
-        localStorage.setItem(localKey(user.uid), JSON.stringify(data));
+
+        // Update only this account's cache.
+        cacheUserData(user.uid, loadedData);
 
         renderUser(user);
         showApp();
         setStatus("");
 
-        app.init();
+        if (
+            typeof app !== "undefined" &&
+            typeof app.init === "function"
+        ) {
+            app.init();
+        } else {
+            throw new Error(
+                "PrepPlanner app is not initialized. Check app.js loading order."
+            );
+        }
     } catch (error) {
-        console.error("Could not load PrepPlanner data:", error);
+        console.error(
+            "Could not load PrepPlanner data:",
+            error
+        );
 
-        // Fail closed rather than showing another account's data.
+        // Do not let an old request sign out a newer session.
+        if (
+            requestId !== authRequestId ||
+            !currentUser ||
+            currentUser.uid !== user.uid
+        ) {
+            return;
+        }
+
         currentUser = null;
-        await signOut(auth).catch(() => {});
+
+        await signOut(auth).catch((signOutError) => {
+            console.error(
+                "Sign-out after loading failure failed:",
+                signOutError
+            );
+        });
 
         showLogin();
+
         setStatus(
             "Could not load your data. Check Firebase setup and Firestore rules, then sign in again."
         );
