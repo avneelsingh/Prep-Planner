@@ -6,6 +6,7 @@
 ![Firebase](https://img.shields.io/badge/Firebase-%23039BE5.svg?style=for-the-badge&logo=firebase&logoColor=white)
 
 **[Open PrepPro](https://prepyproo.web.app)**
+
 **[Code](https://github.com/khemsinghbhati/prepyproo)**
 
 PrepPro is a browser-based learning app for organizing study material, practising with flashcards and quizzes, and reviewing learning progress. It includes a hierarchical learning path, Creator and Learner modes, multi-page Notes, question-level timing, attempt history, analytics, and an XP reward system.
